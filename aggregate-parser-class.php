@@ -1,20 +1,31 @@
 <?php
 class Dmarc_Aggregate_Parser {
 	private $dbh;
+	private $ready = false;
+	private $errors = array();
 	
 	function __construct( $db_host, $db_user, $db_pass, $db_name ) {
-		if( !$this->dbh = mysql_connect( $db_host, $db_user, $db_pass, true ) ) {
-			$this->error();
+		if( !$this->dbh = mysql_connect( $db_host, $db_user, $db_pass, true ) )
 			return false;
-		}
 		
-		if( ! mysql_select_db( $db_name, $this->dbh ) ) {
-			$this->error();
+		if( ! mysql_select_db( $db_name, $this->dbh ) )
 			return false;
-		}
+
+		$this->ready = true;
 	}
 	
+	/**
+	 * Parse a set of XML report files
+	 *
+	 * Supply an array of files to parse. Returns true on success or false if
+	 * there were errors. To get a list of errors use the get_errors() method.
+	**/
 	function parse( $xmlfiles ) {
+		if( !$this->ready ) {
+			$this->errors[] = 'Failed to establish database connection.';
+			return false;
+		}
+
 		if( !is_array( $xmlfiles ) )
 			$xmlfiles = array( $xmlfiles );
 		
@@ -27,20 +38,18 @@ class Dmarc_Aggregate_Parser {
 			$id = $xml->report_metadata->report_id;
 			$domain = $xml->policy_published->domain;
 			
-			echo "\nParsing report $id from $org: ";
-			
 			// no duplicates please
 			$r = $this->query( $this->prepare( "SELECT org, report_id FROM report WHERE report_id = %s", $id ) );
 		
 			if( mysql_num_rows( $r ) ) {
-				echo 'failed - this report has already been parsed.';
+				$this->errors[] =  "Stopped parsing report $id from $org: this report has already been parsed.";
 				continue;
 			}
 			
 			$result = $this->query( $this->prepare( "INSERT INTO report(date_begin, date_end, domain, org, report_id) VALUES (FROM_UNIXTIME(%s),FROM_UNIXTIME(%s), %s, %s, %s)", $date_begin, $date_end, $domain, $org, $id ) );
 			
-			if( false == $result ) {
-				echo 'failed - unable to insert entry into database.';
+			if( false === $result ) {
+				$this->errors[] = mysql_error( $this->dbh );
 				continue;
 			}
 				
@@ -53,24 +62,22 @@ class Dmarc_Aggregate_Parser {
 				
 				$query = $this->prepare( "INSERT INTO rptrecord(serial,ip,count,disposition,reason,dkim_domain,dkim_result,spf_domain,spf_result) VALUES(%s, INET_ATON(%s), %s, %s, %s, %s, %s, %s, %s)", $serial, $row->source_ip, $row->count, $row->policy_evaluated->disposition, $row->policy_evaluated->reason->type, $results->dkim->domain, $results->dkim->result, $results->spf->domain, $results->spf->result ); 
 				
-				$this->query( $query );
+				$result = $this->query( $query );
+
+				if( false === $result )
+					$this->errors[] = mysql_error( $this->dbh );
 			}
-			
-			echo 'success.';
 		}
+
+		return empty( $this->errors );
 	}
 	
-	private function error( $err = false ){
-		trigger_error( $err ? $err : mysql_error() );
+	function get_errors() {
+		return $this->errors;
 	}
 	
 	private function query( $query ) {
-		$result = mysql_query( $query, $this->dbh );
-		if( $error = mysql_error( $this->dbh ) ) {
-			$this->error( $error );
-			return false;
-		}
-		return $result;
+		return mysql_query( $query, $this->dbh );
 	}
 	
 	private function prepare( $query ) {
