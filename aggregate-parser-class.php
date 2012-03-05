@@ -27,7 +27,7 @@ class Dmarc_Aggregate_Parser {
 			$id = $xml->report_metadata->report_id;
 			$domain = $xml->policy_published->domain;
 			
-			echo "Parsing report $id from $org: ";
+			echo "\nParsing report $id from $org: ";
 			
 			// no duplicates please
 			$r = $this->query( $this->prepare( "SELECT org, report_id FROM report WHERE report_id = %s", $id ) );
@@ -56,7 +56,7 @@ class Dmarc_Aggregate_Parser {
 				$this->query( $query );
 			}
 			
-			echo "success.\n";
+			echo 'success.';
 		}
 	}
 	
