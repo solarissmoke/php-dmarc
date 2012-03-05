@@ -40,7 +40,7 @@ class Dmarc_Aggregate_Parser {
 			$result = $this->query( $this->prepare( "INSERT INTO report(date_begin, date_end, domain, org, report_id) VALUES (FROM_UNIXTIME(%s),FROM_UNIXTIME(%s), %s, %s, %s)", $date_begin, $date_end, $domain, $org, $id ) );
 			
 			if( false == $result ) {
-				echo 'failed - unable to insert entry into database.'
+				echo 'failed - unable to insert entry into database.';
 				continue;
 			}
 				
