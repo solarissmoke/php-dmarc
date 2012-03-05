@@ -34,13 +34,15 @@ class Dmarc_Aggregate_Parser {
 		
 			if( mysql_num_rows( $r ) ) {
 				echo 'failed - this report has already been parsed.';
-				return;
+				continue;
 			}
 			
 			$result = $this->query( $this->prepare( "INSERT INTO report(date_begin, date_end, domain, org, report_id) VALUES (FROM_UNIXTIME(%s),FROM_UNIXTIME(%s), %s, %s, %s)", $date_begin, $date_end, $domain, $org, $id ) );
 			
-			if( false == $result )
-				return;
+			if( false == $result ) {
+				echo 'failed - unable to insert entry into database.'
+				continue;
+			}
 				
 			$serial = mysql_insert_id( $this->dbh );
 			
@@ -54,7 +56,7 @@ class Dmarc_Aggregate_Parser {
 				$this->query( $query );
 			}
 			
-			echo 'success.';
+			echo "success.\n";
 		}
 	}
 	
