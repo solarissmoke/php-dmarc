@@ -60,6 +60,10 @@ class Dmarc_Aggregate_Parser {
 				$row = $record->row;
 				$results = $record->auth_results;
 				
+				// Google incorrectly uses "hardfail" in SPF results
+				if( $results->spf->result == 'hardfail' )
+					$results->spf->result = 'fail';
+
 				$query = $this->prepare( "INSERT INTO rptrecord(serial,ip,count,disposition,reason,dkim_domain,dkim_result,spf_domain,spf_result) VALUES(%s, INET_ATON(%s), %s, %s, %s, %s, %s, %s, %s)", $serial, $row->source_ip, $row->count, $row->policy_evaluated->disposition, $row->policy_evaluated->reason->type, $results->dkim->domain, $results->dkim->result, $results->spf->domain, $results->spf->result ); 
 				
 				$result = $this->query( $query );
