@@ -7,7 +7,7 @@ Improvements/fixes welcome.
 ## Usage
 
 - Set up your database. `tables.sql` contains the SQL needed to set up the tables.
-- Use the `Dmarc_Aggregate_Parser` class to parse reports - you need to supply it with database credentials and a file (or array of files) to parse, and then run the `parse()` function with an array of files to parse. Something like this:
+- Use the `Dmarc_Aggregate_Parser` class to parse reports - you need to supply it with database credentials, and then run the `parse()` function with an array of files to parse. Something like this:
 
 		$parser = new Dmarc_Aggregate_Parser( 'dbhost', 'dbuser', 'dbpass', 'dbname' );
 		$parser->parse( array( 'report-file-1.xml', 'report-file-2.xml', 'report-file-3.xml' ) );
