@@ -13,7 +13,7 @@ CREATE TABLE report (
 
 CREATE TABLE rptrecord (
   serial int(10) unsigned NOT NULL,
-  ip int(10) unsigned NOT NULL,
+  ip varchar(39) NOT NULL,
   count int(10) unsigned NOT NULL,
   disposition enum('none','quarantine','reject'),
   reason varchar(255),
