@@ -5,12 +5,16 @@ class Dmarc_Aggregate_Parser {
 	private $errors = array();
 
 	function __construct( $db_host, $db_user, $db_pass, $db_name ) {
-		if( !$this->dbh = mysql_connect( $db_host, $db_user, $db_pass, true ) )
+		try {
+			$this->dbh = new PDO( "mysql:host=$db_host;dbname=$db_name", $db_user, $db_pass );
+		}
+		catch( PDOException $e ) {
+			$this->errors[] = 'Failed to establish database connection.';
+			$this->errors[] = $e->getMessage();
 			return false;
+		}
 
-		if( ! mysql_select_db( $db_name, $this->dbh ) )
-			return false;
-
+		$this->dbh->setAttribute( PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION );
 		$this->ready = true;
 	}
 
@@ -22,10 +26,8 @@ class Dmarc_Aggregate_Parser {
 	 * You can supply either ZIP files or XML files.
 	**/
 	function parse( $files ) {
-		if( !$this->ready ) {
-			$this->errors[] = 'Failed to establish database connection.';
+		if( !$this->ready )
 			return false;
-		}
 
 		if( !is_array( $files ) )
 			$files = array( $files );
@@ -51,21 +53,23 @@ class Dmarc_Aggregate_Parser {
 			$domain = $xml->policy_published->domain;
 
 			// no duplicates please
-			$r = $this->query( $this->prepare( "SELECT org, report_id FROM report WHERE report_id = %s", $id ) );
-
-			if( mysql_num_rows( $r ) ) {
+			$sth = $this->dbh->prepare( "SELECT org, report_id FROM report WHERE report_id = :report_id" );
+			$sth->execute( array( 'report_id' => $id ) );
+			if( $sth->rowCount() ) {
 				$this->errors[] =  "Stopped parsing report $id from $org: this report has already been parsed.";
 				continue;
 			}
 
-			$result = $this->query( $this->prepare( "INSERT INTO report(date_begin, date_end, domain, org, report_id) VALUES (FROM_UNIXTIME(%s),FROM_UNIXTIME(%s), %s, %s, %s)", $date_begin, $date_end, $domain, $org, $id ) );
-
-			if( false === $result ) {
-				$this->errors[] = mysql_error( $this->dbh );
+			try {
+				$sth = $this->dbh->prepare( "INSERT INTO report(date_begin, date_end, domain, org, report_id) VALUES (FROM_UNIXTIME(:date_begin),FROM_UNIXTIME(:date_end), :domain, :org, :id)" );
+				$sth->execute( array( 'date_begin' => $date_begin, 'date_end' => $date_end, 'domain' => $domain, 'org' => $org, 'id' => $id ) );
+			}
+			catch( PDOException $e ) {
+				$this->errors[] = $e->getMessage();
 				continue;
 			}
 
-			$serial = mysql_insert_id( $this->dbh );
+			$serial = $this->dbh->lastInsertId();
 
 			// parse records
 			foreach( $xml->record as $record ) {
@@ -76,12 +80,13 @@ class Dmarc_Aggregate_Parser {
 				if( $results->spf->result == 'hardfail' )
 					$results->spf->result = 'fail';
 
-				$query = $this->prepare( "INSERT INTO rptrecord(serial,ip,count,disposition,reason,dkim_domain,dkim_result,spf_domain,spf_result) VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s)", $serial, $row->source_ip, $row->count, $row->policy_evaluated->disposition, $row->policy_evaluated->reason->type, $results->dkim->domain, $results->dkim->result, $results->spf->domain, $results->spf->result );
-
-				$result = $this->query( $query );
-
-				if( false === $result )
-					$this->errors[] = mysql_error( $this->dbh );
+				try {
+					$sth = $this->dbh->prepare( "INSERT INTO rptrecord(serial,ip,count,disposition,reason,dkim_domain,dkim_result,spf_domain,spf_result) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)" );
+					$sth->execute( array( $serial, $row->source_ip, $row->count, $row->policy_evaluated->disposition, $row->policy_evaluated->reason->type, $results->dkim->domain, $results->dkim->result, $results->spf->domain, $results->spf->result ) );
+				}
+				catch( PDOException $e ) {
+					$this->errors[] = $e->getMessage();
+				}
 			}
 		}
 
@@ -110,21 +115,5 @@ class Dmarc_Aggregate_Parser {
 		}
 		zip_close( $zip );
 		return $data;
-	}
-
-	private function query( $query ) {
-		return mysql_query( $query, $this->dbh );
-	}
-
-	private function prepare( $query ) {
-		$args = func_get_args();
-		array_shift( $args );
-		$query = preg_replace( '|(?<!%)%s|', "'%s'", $query ); // quote strings, avoiding escaped strings
-		array_walk( $args, array( $this, 'esc' ) );
-		return @vsprintf( $query, $args );
-	}
-
-	private function esc( $str ) {
-		return mysql_real_escape_string( $str, $this->dbh );
 	}
 }
