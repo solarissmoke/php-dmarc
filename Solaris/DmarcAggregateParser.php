@@ -13,7 +13,7 @@ class DmarcAggregateParser {
 
 	function __construct( $db_host, $db_user, $db_pass, $db_name ) {
 		try {
-			$this->dbh = new PDO( "mysql:host=$db_host;dbname=$db_name", $db_user, $db_pass );
+			$this->dbh = new \PDO( "mysql:host=$db_host;dbname=$db_name", $db_user, $db_pass );
 		}
 		catch( PDOException $e ) {
 			$this->errors[] = 'Failed to establish database connection.';
@@ -21,7 +21,7 @@ class DmarcAggregateParser {
 			return false;
 		}
 
-		$this->dbh->setAttribute( PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION );
+		$this->dbh->setAttribute( \PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION );
 		$this->ready = true;
 	}
 
@@ -51,7 +51,7 @@ class DmarcAggregateParser {
 				$data = file_get_contents( $file );
 			}
 
-			$xml = new SimpleXMLElement( $data );
+			$xml = new \SimpleXMLElement( $data );
 
 			$date_begin = (int) $xml->report_metadata->date_range->begin;
 			$date_end = (int) $xml->report_metadata->date_range->end;
