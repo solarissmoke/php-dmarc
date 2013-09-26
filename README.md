@@ -4,12 +4,17 @@ php-dmarc is a small PHP class I wrote to parse [DMARC](http://dmarc.org) aggreg
 
 Improvements/fixes welcome.
 
+## Installation
+
+The library is available on Packagist ([solaris/php-dmarc](http://packagist.org/packages/solaris/php-dmarc))
+and can be installed using [Composer](http://getcomposer.org/). Alternatively you can grab the code directly from GitHub and include the `DmarcAggregateParser.php` script directly or via a PSR-0 autoloader.
+
 ## Usage
 
 - Set up your database. `tables.sql` contains the SQL needed to set up the tables.
-- Use the `Dmarc_Aggregate_Parser` class to parse reports - you need to supply it with database credentials, and then run the `parse()` function with an array of files to parse. Something like this:
+- Use the `Solaris\DmarcAggregateParser` class to parse reports - you need to supply it with database credentials, and then run the `parse()` function with an array of files to parse. Something like this:
 
-		$parser = new Dmarc_Aggregate_Parser( 'dbhost', 'dbuser', 'dbpass', 'dbname' );
+		$parser = new Solaris\DmarcAggregateParser( 'dbhost', 'dbuser', 'dbpass', 'dbname' );
 		$parser->parse( array( 'report-file-1.xml', 'report-file-2.xml', 'report-file-3.xml' ) );
 
     You can supply either XML files or ZIP files. It is assumed that each ZIP file contains only one report.

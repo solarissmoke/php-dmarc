@@ -1,5 +1,12 @@
 <?php
-class Dmarc_Aggregate_Parser {
+/**
+ * A simple DMARC report parser for PHP
+ * Samir Shah (http://rayofsolaris.net)
+ * License: MIT
+ **/
+namespace Solaris;
+
+class DmarcAggregateParser {
 	private $dbh;
 	private $ready = false;
 	private $errors = array();
