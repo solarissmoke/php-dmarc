@@ -6,7 +6,7 @@
     "type": "library",
     "license": "MIT",
     "authors": [
-        { "name": "Samir Shah", "email": "samir@rayofsolaris.net" },
+        { "name": "Samir Shah", "email": "samir@rayofsolaris.net" }
     ],
     "require": {
         "php": ">=5.3.0"
