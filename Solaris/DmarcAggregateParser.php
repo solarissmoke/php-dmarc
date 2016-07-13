@@ -109,10 +109,10 @@ class DmarcAggregateParser {
 						try {
 							$sth = $this->dbh->prepare( "INSERT INTO rptresult(serial,ip,type,seq,domain,result) VALUES(?, ?, ?, ?, ?, ?)" );
 							$sth->execute( array( $serial, $row->source_ip, $type, $seq, $result->domain, $result->result ) );
-				}
-				catch( PDOException $e ) {
-					$this->errors[] = $e->getMessage();
-				}
+						}
+						catch( PDOException $e ) {
+							$this->errors[] = $e->getMessage();
+						}
 
 						$seq++;
 					}
