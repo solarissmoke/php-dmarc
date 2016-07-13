@@ -96,11 +96,26 @@ class DmarcAggregateParser {
 					$results->spf->result = 'fail';
 
 				try {
-					$sth = $this->dbh->prepare( "INSERT INTO rptrecord(serial,ip,count,disposition,reason,dkim_domain,dkim_result,spf_domain,spf_result) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)" );
-					$sth->execute( array( $serial, $row->source_ip, $row->count, $row->policy_evaluated->disposition, $row->policy_evaluated->reason->type, $results->dkim->domain, $results->dkim->result, $results->spf->domain, $results->spf->result ) );
+					$sth = $this->dbh->prepare( "INSERT INTO rptrecord(serial,ip,count,disposition,reason,dkim_result,spf_result) VALUES(?, ?, ?, ?, ?, ?, ?)" );
+					$sth->execute( array( $serial, $row->source_ip, $row->count, $row->policy_evaluated->disposition, $row->policy_evaluated->reason->type, $row->policy_evaluated->dkim, $row->policy_evaluated->spf ) );
 				}
 				catch( PDOException $e ) {
 					$this->errors[] = $e->getMessage();
+				}
+
+				foreach (array('dkim', 'spf') as $type) {
+					$seq = 0;
+					foreach ($results->{$type} as $result) {
+						try {
+							$sth = $this->dbh->prepare( "INSERT INTO rptresult(serial,ip,type,seq,domain,result) VALUES(?, ?, ?, ?, ?, ?)" );
+							$sth->execute( array( $serial, $row->source_ip, $type, $seq, $result->domain, $result->result ) );
+				}
+				catch( PDOException $e ) {
+					$this->errors[] = $e->getMessage();
+				}
+
+						$seq++;
+					}
 				}
 			}
 		}
