@@ -17,9 +17,17 @@ CREATE TABLE rptrecord (
   count int(10) unsigned NOT NULL,
   disposition enum('none','quarantine','reject'),
   reason varchar(255),
-  dkim_domain varchar(255),
   dkim_result enum('none','pass','fail','neutral','policy','temperror','permerror'),
-  spf_domain varchar(255),
   spf_result enum('none','neutral','pass','fail','softfail','temperror','permerror'),
   KEY serial (serial,ip)
+);
+
+CREATE TABLE rptresult (
+  serial int(10) unsigned NOT NULL,
+  ip varchar(39) NOT NULL,
+  type enum('dkim','spf'),
+  seq int(10) unsigned NOT NULL,
+  domain varchar(255),
+  result enum('none','pass','fail','neutral','policy','temperror','permerror'),
+  KEY serial (serial,ip,type,seq)
 );
