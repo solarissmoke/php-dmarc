@@ -22,10 +22,3 @@ and can be installed using [Composer](http://getcomposer.org/). Alternatively yo
 - Knock your self out analysing the data.
 
 The `parse()` function returns `false` if it encounters any errors while parsing the data (`true` otherwise). To see what the errors were, use the `get_errors()` method, which will return an array of error messages.
-
-## To do
-
-Once recipients start supporting them:
-
-- Failure report parser
-- An endpoint for receiving reports using HTTP
