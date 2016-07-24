@@ -1,4 +1,4 @@
-USE dmarc
+USE dmarc;
 
 CREATE TABLE report (
   serial int(10) unsigned NOT NULL AUTO_INCREMENT,
