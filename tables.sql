@@ -28,6 +28,6 @@ CREATE TABLE rptresult (
   type enum('dkim','spf'),
   seq int(10) unsigned NOT NULL,
   domain varchar(255),
-  result enum('none','pass','fail','neutral','policy','temperror','permerror'),
+  result enum('none','pass','fail','softfail','neutral','policy','temperror','permerror'),
   KEY serial (serial,ip,type,seq)
 );
