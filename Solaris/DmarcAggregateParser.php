@@ -39,6 +39,8 @@ class DmarcAggregateParser {
 		if( !is_array( $files ) )
 			$files = array( $files );
 
+		$this->dbh->beginTransaction();
+
 		foreach( $files as $file ) {
 			switch (true) {
 				case strtolower( substr( $file, -4 ) ) === '.zip':
@@ -118,6 +120,12 @@ class DmarcAggregateParser {
 					}
 				}
 			}
+		}
+
+		if (empty($this->errors)) {
+			$this->dbh->commit();
+		} else {
+			$this->dbh->rollBack();
 		}
 
 		return empty( $this->errors );
