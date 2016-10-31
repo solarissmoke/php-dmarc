@@ -10,8 +10,12 @@ class DmarcAggregateParser {
 	private $dbh;
 	private $ready = false;
 	private $errors = array();
+	private $tbl_prefix = '';
 
-	function __construct( $db_host, $db_user, $db_pass, $db_name ) {
+	function __construct( $db_host, $db_user, $db_pass, $db_name, $tbl_prefix = '' ) {
+		if($tbl_prefix){
+			$this->tbl_prefix = $tbl_prefix;
+		}
 		try {
 			$this->dbh = new \PDO( "mysql:host=$db_host;dbname=$db_name", $db_user, $db_pass );
 		}
@@ -68,7 +72,7 @@ class DmarcAggregateParser {
 			$domain = $xml->policy_published->domain;
 
 			// no duplicates please
-			$sth = $this->dbh->prepare( "SELECT org, report_id FROM report WHERE report_id = :report_id" );
+			$sth = $this->dbh->prepare( sprintf("SELECT org, report_id FROM `%sreport` WHERE report_id = :report_id", $this->tbl_prefix) );
 			$sth->execute( array( 'report_id' => $id ) );
 			if( $sth->rowCount() ) {
 				$this->errors[] =  "Stopped parsing report $id from $org: this report has already been parsed.";
@@ -76,7 +80,7 @@ class DmarcAggregateParser {
 			}
 
 			try {
-				$sth = $this->dbh->prepare( "INSERT INTO report(date_begin, date_end, domain, org, report_id) VALUES (FROM_UNIXTIME(:date_begin),FROM_UNIXTIME(:date_end), :domain, :org, :id)" );
+				$sth = $this->dbh->prepare( sprintf("INSERT INTO `%sreport`(date_begin, date_end, domain, org, report_id) VALUES (FROM_UNIXTIME(:date_begin),FROM_UNIXTIME(:date_end), :domain, :org, :id)", $this->tbl_prefix) );
 				$sth->execute( array( 'date_begin' => $date_begin, 'date_end' => $date_end, 'domain' => $domain, 'org' => $org, 'id' => $id ) );
 			}
 			catch( PDOException $e ) {
@@ -96,7 +100,7 @@ class DmarcAggregateParser {
 					$results->spf->result = 'fail';
 
 				try {
-					$sth = $this->dbh->prepare( "INSERT INTO rptrecord(serial,ip,count,disposition,reason,dkim_result,spf_result) VALUES(?, ?, ?, ?, ?, ?, ?)" );
+					$sth = $this->dbh->prepare( sprintf("INSERT INTO `%srptrecord`(serial,ip,count,disposition,reason,dkim_result,spf_result) VALUES(?, ?, ?, ?, ?, ?, ?)", $this->tbl_prefix) );
 					$sth->execute( array( $serial, $row->source_ip, $row->count, $row->policy_evaluated->disposition, $row->policy_evaluated->reason->type, $row->policy_evaluated->dkim, $row->policy_evaluated->spf ) );
 				}
 				catch( PDOException $e ) {
@@ -107,7 +111,7 @@ class DmarcAggregateParser {
 					$seq = 0;
 					foreach ($results->{$type} as $result) {
 						try {
-							$sth = $this->dbh->prepare( "INSERT INTO rptresult(serial,ip,type,seq,domain,result) VALUES(?, ?, ?, ?, ?, ?)" );
+							$sth = $this->dbh->prepare( sprintf("INSERT INTO `%srptresult`(serial,ip,type,seq,domain,result) VALUES(?, ?, ?, ?, ?, ?)", $this->tbl_prefix) );
 							$sth->execute( array( $serial, $row->source_ip, $type, $seq, $result->domain, $result->result ) );
 						}
 						catch( PDOException $e ) {
