@@ -9,6 +9,8 @@ Improvements/fixes welcome.
 The library is available on Packagist ([solaris/php-dmarc](http://packagist.org/packages/solaris/php-dmarc))
 and can be installed using [Composer](http://getcomposer.org/). Alternatively you can grab the code directly from GitHub and include the `DmarcAggregateParser.php` script directly or via a PSR-0 autoloader.
 
+Requires php zip support eg. php5-zip or php7.0-zip
+
 ## Usage
 
 - Set up your database. `tables.sql` contains the SQL needed to set up the tables.
@@ -17,7 +19,7 @@ and can be installed using [Composer](http://getcomposer.org/). Alternatively yo
 		$parser = new Solaris\DmarcAggregateParser( 'dbhost', 'dbuser', 'dbpass', 'dbname' );
 		$parser->parse( array( 'report-file-1.xml', 'report-file-2.xml', 'report-file-3.xml' ) );
 
-    You can supply either XML files or ZIP files. It is assumed that each ZIP file contains only one report.
+    You can supply either XML files or ZIP/GZIP files. It is assumed that each ZIP/GZIP file contains only one report.
 
 - Knock your self out analysing the data.
 
