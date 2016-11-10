@@ -95,6 +95,11 @@ class DmarcAggregateParser {
 				$row = $record->row;
 				$results = $record->auth_results;
 
+				foreach (['dkim', 'spf'] as $type) {
+					if (!property_exists($row->policy_evaluated, $type))                        
+                        			$row->policy_evaluated->{$type} = 'none';                        
+                		}
+				
 				// Google incorrectly uses "hardfail" in SPF results
 				if( $results->spf->result == 'hardfail' )
 					$results->spf->result = 'fail';
