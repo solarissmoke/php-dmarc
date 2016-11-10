@@ -80,10 +80,6 @@ class DmarcAggregateParser {
 			}
 
 			try {
-                    		foreach (['dkim', 'spf'] as $type) {
-                        		if (!property_exists($row->policy_evaluated, $type))                        
-                            		$row->policy_evaluated->{$type} = 'none';                        
-                    		}
 				$sth = $this->dbh->prepare( sprintf("INSERT INTO `%sreport`(date_begin, date_end, domain, org, report_id) VALUES (FROM_UNIXTIME(:date_begin),FROM_UNIXTIME(:date_end), :domain, :org, :id)", $this->tbl_prefix) );
 				$sth->execute( array( 'date_begin' => $date_begin, 'date_end' => $date_end, 'domain' => $domain, 'org' => $org, 'id' => $id ) );
 			}
