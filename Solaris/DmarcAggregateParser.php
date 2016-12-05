@@ -104,6 +104,11 @@ class DmarcAggregateParser {
 				if( $results->spf->result == 'hardfail' )
 					$results->spf->result = 'fail';
 
+				foreach (['dkim', 'spf'] as $type) {
+					if (!property_exists($row->policy_evaluated, $type))                        
+                        			$row->policy_evaluated->{$type} = 'none';                        
+                		}
+				
 				try {
 					$sth = $this->dbh->prepare( sprintf("INSERT INTO `%srptrecord`(serial,ip,count,disposition,reason,dkim_result,spf_result) VALUES(?, ?, ?, ?, ?, ?, ?)", $this->tbl_prefix) );
 					$sth->execute( array( $serial, $row->source_ip, $row->count, $row->policy_evaluated->disposition, $row->policy_evaluated->reason->type, $row->policy_evaluated->dkim, $row->policy_evaluated->spf ) );
