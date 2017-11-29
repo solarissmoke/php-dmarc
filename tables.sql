@@ -8,7 +8,7 @@ CREATE TABLE report (
   org varchar(255) NOT NULL,
   report_id varchar(255) NOT NULL,
   PRIMARY KEY (serial),
-  UNIQUE KEY domain (domain,report_id)
+  UNIQUE KEY domain (domain,org,report_id)
 );
 
 CREATE TABLE rptrecord (

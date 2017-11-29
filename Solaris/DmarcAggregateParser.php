@@ -72,8 +72,8 @@ class DmarcAggregateParser {
 			$domain = $xml->policy_published->domain;
 
 			// no duplicates please
-			$sth = $this->dbh->prepare( sprintf("SELECT org, report_id FROM `%sreport` WHERE report_id = :report_id", $this->tbl_prefix) );
-			$sth->execute( array( 'report_id' => $id ) );
+			$sth = $this->dbh->prepare( sprintf("SELECT org, report_id FROM `%sreport` WHERE org = :org AND report_id = :report_id", $this->tbl_prefix) );
+			$sth->execute( array( 'report_id' => $id, 'org' => $org ) );
 			if( $sth->rowCount() ) {
 				$this->errors[] =  "Stopped parsing report $id from $org: this report has already been parsed.";
 				continue;
